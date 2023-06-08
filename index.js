@@ -12,7 +12,7 @@ const io = socketIo(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    credentials: true,
+    // credentials: true,
   },
 });
 app.use(cors());
@@ -33,17 +33,20 @@ const options = {
 };
 
 const client = mqtt.connect(options);
+console.log(client)
 
 client.on("connect", () => {
+  console.log('hola1')
   console.log("connected to the app");
   try {
-    client.subscribe(process.env.UPLINK_ENDPOINT);
+    client.subscribe("#");
     console.log("client connected");
   } catch (error) {
     console.log(error);
   }
 });
 client.on("message", (topic, message) => {
+  console.log('hola2')
   try {
     console.log(message.toString());
     io.emit("mqtt", { topic, message: message.toString() });
@@ -51,7 +54,13 @@ client.on("message", (topic, message) => {
     io.emit("mqtt", { topic, message: error });
   }
 });
-
+io.on("connection",(socket)=>{
+  console.log("new client connected")
+  socket.emit("hello","world");
+  socket.on("hello from client",()=>{
+    console.log("hola")
+  })
+})
 server.listen(process.env.PORT_LOCAL_SERVER, () => {
   console.log(
     `Listening in port http://localhost:${process.env.PORT_LOCAL_SERVER}`,
